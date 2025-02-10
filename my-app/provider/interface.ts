@@ -6,7 +6,7 @@ export interface ContextProps {
 
 export interface IContext {
   get_list: () => void;
-  retrieve_by_id: (id: number) => void;
+  retrieve_by_id: (id: number) => Promise<IAccomodation[] | undefined>;
   retrieve_by_city: (city: string) => Promise<IAccomodation[]>;
-  loading: boolean;
+  detailAcc: IAccomodation | null;
 }

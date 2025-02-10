@@ -7,12 +7,15 @@ import { ContextProps, IContext } from './interface';
 import { useStore } from 'zustand';
 import accomodationStore from '@/stores/accomodations';
 import { IAccomodation } from '@/stores/accomodations/interface';
+import { useRouter } from 'next/navigation';
 
 export const Context = createContext({} as IContext);
 
 export const Provider = ({ children }: ContextProps) => {
+  const [detailAcc, setDetailAcc] = useState<IAccomodation | null>(null);
   const { setAccomodationList } = useStore(accomodationStore);
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
+
   const get_list = async () => {
     try {
       const response = await Api.get(`acomodacoes`, {
@@ -24,24 +27,27 @@ export const Provider = ({ children }: ContextProps) => {
     } catch (error) {
       console.log(error);
       throw error;
+    } finally {
     }
   };
-
-  const retrieve_by_id = async (id: number) => {
+  const retrieve_by_id = async (
+    id: number
+  ): Promise<IAccomodation[] | undefined> => {
     try {
       const response = await Api.get(`acomodacoes/${id}`, {
         headers: {
           Accept: '*/*'
         }
       });
-      console.log(response.data);
+      setDetailAcc(response.data);
+      return response.data;
     } catch (error) {
       console.log(error);
-      throw error;
+      router.replace('/dashboard');
+    } finally {
     }
   };
   const retrieve_by_city = async (city: string): Promise<IAccomodation[]> => {
-    setLoading(true);
     try {
       const response = await Api.get(`acomodacoes?cidade=${city}`, {
         headers: {
@@ -53,13 +59,12 @@ export const Provider = ({ children }: ContextProps) => {
       console.log(error);
       throw error;
     } finally {
-      setLoading(false);
     }
   };
 
   return (
     <Context.Provider
-      value={{ get_list, retrieve_by_id, retrieve_by_city, loading }}
+      value={{ get_list, retrieve_by_id, retrieve_by_city, detailAcc }}
     >
       {children}
     </Context.Provider>

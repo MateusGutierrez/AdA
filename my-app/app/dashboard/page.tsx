@@ -11,17 +11,24 @@ import {
   CardTitle
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Context } from '@/provider';
 import accomodationStore from '@/stores/accomodations';
 import { isEmpty } from 'lodash';
+import { useContext, useEffect } from 'react';
 import { FaSadTear } from 'react-icons/fa';
 import { FaHotel } from 'react-icons/fa6';
 import { MdFavorite } from 'react-icons/md';
 import { useStore } from 'zustand';
 
 const Dashboard: React.FC = () => {
+  const { get_list } = useContext(Context);
   const { accomodationList, favorites, setAccomodationList } =
     useStore(accomodationStore);
 
+  useEffect(() => {
+    get_list();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return (
     <Tabs defaultValue="accomodations" className="w-full pt-2">
       <div className="flex justify-end">

@@ -11,10 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import { IAccomodation } from '@/stores/accomodations/interface';
 import Image from 'next/image';
-import { MdFavorite, MdFavoriteBorder } from 'react-icons/md';
-import accomodationStore from '@/stores/accomodations';
-import { useStore } from 'zustand';
-import { useCallback, useMemo } from 'react';
+import { useCallback, useContext } from 'react';
 import { Label } from './ui/label';
 import { BiSolidMessageSquareDetail } from 'react-icons/bi';
 import { useRouter } from 'next/navigation';
@@ -25,6 +22,9 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip';
 import { IoArrowRedo } from 'react-icons/io5';
+import useToggleFavorite from '@/hooks/useToggleFavorite';
+import { Context } from '@/provider';
+import { toast } from 'react-toastify';
 
 interface Props {
   className?: string;
@@ -32,20 +32,21 @@ interface Props {
 }
 
 const AccomodationCard: React.FC<Props> = ({ className, acc }) => {
-  const { setFavorite, removeFromFavoriteList, favorites } =
-    useStore(accomodationStore);
+  const { FavoriteButton } = useToggleFavorite(acc);
+  const { retrieve_by_id } = useContext(Context);
   const router = useRouter();
-  const isFavorite = useMemo(
-    () => favorites.some(item => item.id === acc.id),
-    [acc.id, favorites]
-  );
-  const toggleFavorite = useCallback(
-    () => (isFavorite ? removeFromFavoriteList(acc.id) : setFavorite(acc)),
-    [isFavorite, acc, setFavorite, removeFromFavoriteList]
-  );
-  const navigate = useCallback(() => {
-    router.push(`/dashboard/${acc.id}`);
-  }, [acc.id, router]);
+  const handleNavigation = useCallback(async () => {
+    toast
+      .promise(retrieve_by_id(acc.id), {
+        pending: 'Carregando detalhes...',
+        success: 'Detalhes carregados!',
+        error: 'Erro ao carregar detalhes.'
+      })
+      .then(() => {
+        router.push(`/dashboard/${acc.id}`);
+      });
+  }, [acc.id, retrieve_by_id, router]);
+
   return (
     <Card
       className={cn(
@@ -74,7 +75,7 @@ const AccomodationCard: React.FC<Props> = ({ className, acc }) => {
                 <TooltipTrigger asChild>
                   <Button
                     className="bg-black/80 hover:bg-black/50"
-                    onClick={navigate}
+                    onClick={handleNavigation}
                   >
                     <BiSolidMessageSquareDetail className="text-primary" />
                   </Button>
@@ -85,16 +86,7 @@ const AccomodationCard: React.FC<Props> = ({ className, acc }) => {
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            <Button
-              className="bg-white/20 hover:bg-white/30"
-              onClick={toggleFavorite}
-            >
-              {isFavorite ? (
-                <MdFavorite className="text-red-500" />
-              ) : (
-                <MdFavoriteBorder className="text-gray-300" />
-              )}
-            </Button>
+            <FavoriteButton />
           </div>
         </div>
         <CardDescription className="text-gray-300 flex justify-between pt-2">
